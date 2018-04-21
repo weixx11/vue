@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>todos</title>
+</head>
+<style>
+    * {
+        padding: 0;
+        margin: 0;
+    }
+    #delete {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-left: 10px;
+        border-radius: 100%;
+        line-height: 20px;
+        text-align: center;
+        background: red;
+        color: #fff;
+    }
+</style>
+<body>
+        <div class="box">
+            <input id="txt" type="text" @keyup.enter='inArr()'>
+            <ul>
+            <li v-for="(i,index) in item" :data-index='index'>
+            {{i.fields.content}}<span id="delete" @click='deleteArr($event)' >x</span>
+            </li>
+            </ul>
+        </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+       var app = new Vue({
+           el:'.box',
+           data:{
+               item:[]
+           },
+           methods:{
+                inArr:function(){
+                    // console.log('come');
+                    var val = document.getElementById('txt').value;
+                    var obj = {fields:{content:val}}
+                    this.item.push(obj);
+                    document.getElementById('txt').value = "";
+                    $.ajax({
+                        type: "get",
+                        url:'http://127.0.0.1:8080/add',
+                        data:{
+                            name:val,
+                        },
+                        dataType: "json",
+                        success:function(res){
+                            console.log(res.data);
+
+                        },
+                        error:function(err){
+                            console.log(err);
+                        }
+                    })
+
+                },
+                deleteArr:function(event){
+                    var self = this;
+                    var flowIndex = event.target.parentNode.getAttribute("data-index");
+                    // console.log(flowIndex);
+                    var arrL = this.item.length;
+                    if(arrL!== 0 ) {
+                        console.log('go');
+                        self.item.splice(flowIndex,1);
+                        $.ajax({
+                            type: "get",
+                            url:'http://127.0.0.1:8080/show',
+                            data:{
+
+                            },
+                            dataType: "json",
+                            success:function(res){
+                                console.log(res.data[flowIndex].pk);
+                                var num = res.data[flowIndex].pk;
+                                $.ajax({
+                                    type: "get",
+                                    url:'http://127.0.0.1:8080/delete',
+                                    data:{
+                                        id:num
+                                    },
+                                    dataType: "json",
+                                    success:function(res){
+
+                                    },
+                                    error:function(err){
+                                            console.log(err);
+                                    }
+                                })
+
+                            },
+                            error:function(err){
+                                    console.log(err);
+                            }
+                        })
+                    }
+                }
+           },
+           mounted:function(){
+               var self = this;
+               $.ajax({
+                    type: "get",
+                   url:'http://127.0.0.1:8080/show',
+                   data:{
+
+                   },
+                   dataType: "json",
+                   success:function(res){
+                    // console.log(res.data);
+                    for(var i=0; i<res.data.length;i++){
+                        // console.log(res.data[i])
+                        self.item.push(res.data[i])
+                    }
+                   },
+                   error:function(err){
+                        console.log(err);
+                   }
+               })
+           }
+       })
+    </script>
+</body>
+</html>
